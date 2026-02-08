@@ -8,12 +8,12 @@ const TILE_WIDTH = 80;
 const TILE_HEIGHT = 100;
 
 // Perspective and Debug state
-let ROTATION_X = 45;
+let ROTATION_X = 10;
 let ROTATION_Y = 0;
 let ROTATION_Z = 0;
-let ZOOM_FACTOR = 1.0;
-let PAN_X = 50;
-let PAN_Y = 50;
+let ZOOM_FACTOR = 2.0;
+let PAN_X = 100;
+let PAN_Y = 100;
 let SHOW_FREE_TILES = true;
 const TILE_THICKNESS = 20;
 
@@ -438,5 +438,5 @@ window.onload = () => {
     };
 
     initGame();
-    console.log("Mahjong Solitaire v0.21 initialized.");
+    console.log("Mahjong Solitaire v0.22 initialized.");
 };
