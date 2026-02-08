@@ -3,7 +3,7 @@
  ***********************************************/
 let tiles = [];            // Array containing all tile objects.
 let selectedTileId = null; // Id of the currently selected tile.
-let currentLevel = 1;      // Start at Level 1.
+let currentLevel = 5;      // Start at Level 5.
 const TILE_WIDTH = 80;
 const TILE_HEIGHT = 100;
 
@@ -14,56 +14,39 @@ const tileEmojis = ["🀇","🀈","🀉","🀊","🀋","🀌","🀍","🀎","�
 
 /***********************************************
  * Generate Dynamic Positions for the Level
- * Creates a "Turtle" style pyramid layout with staggering.
+ * Creates a tapering pyramid where tiles are stacked directly on top of each other.
  ***********************************************/
 function generatePositions(level) {
-  let pos = [];
-  let cols = 6 + level;
-  let rows = 4 + Math.floor(level / 2);
+  const pos = [];
 
-  const centerX = 1000;
-  const centerY = 800;
-  const unitW = TILE_WIDTH / 2;
-  const unitH = TILE_HEIGHT / 2;
+  for (let z = 0; z < level; z++) {
+    const diff = (level - 1 - z);
+    // Last layer is 1x1, second-to-last is 2x2, then it grows by 2 each layer down.
+    const width = (diff === 0) ? 1 : diff * 2;
+    const height = (diff === 0) ? 1 : diff * 2;
 
-  let z = 0;
-  while (cols > 0 && rows > 0) {
-    // Staggering: offset by half a tile for every other layer
-    let staggerX = (z % 2) * unitW;
-    let staggerY = (z % 2) * unitH;
+    // Offset for centering the layer
+    const offsetX = 1000 - (width * TILE_WIDTH) / 2;
+    const offsetY = 800 - (height * TILE_HEIGHT) / 2;
 
-    let startX = centerX - (cols * TILE_WIDTH) / 2 + staggerX;
-    let startY = centerY - (rows * TILE_HEIGHT) / 2 + staggerY;
-
-    for (let r = 0; r < rows; r++) {
-      for (let c = 0; c < cols; c++) {
+    for (let r = 0; r < height; r++) {
+      for (let c = 0; c < width; c++) {
         pos.push({
-          x: startX + c * TILE_WIDTH - z * 6, // 3D visual shift for depth
-          y: startY + r * TILE_HEIGHT - z * 6,
+          x: offsetX + c * TILE_WIDTH + (z * 6), // (z*6) for 3D visual shift
+          y: offsetY + r * TILE_HEIGHT - (z * 6),
           z: z,
           width: TILE_WIDTH,
           height: TILE_HEIGHT
         });
       }
     }
-
-    z++;
-    // Tapering logic
-    if (cols === 1 && rows === 1) break;
-    if (cols <= 2 || rows <= 2) {
-      cols = 1;
-      rows = 1;
-    } else {
-      cols -= 2;
-      rows -= 2;
-    }
-
-    if (z > 15) break; // Safety break
   }
 
-  // Ensure we have an even number of positions for matching pairs
+  // Ensure even number of tiles for matching.
+  // We shift() instead of pop() to remove a tile from the bottom layer if necessary,
+  // which helps preserve the single top tile.
   if (pos.length % 2 !== 0) {
-    pos.pop();
+    pos.shift();
   }
 
   return pos;
