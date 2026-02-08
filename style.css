@@ -88,6 +88,53 @@ button:hover {
   font-size: 1rem;
 }
 
+/* ====================== DEBUG CONTROLS ====================== */
+.debug-controls {
+  margin-bottom: 30px;
+  padding: 15px;
+  background-color: #2a2a2a;
+  border-radius: 8px;
+  border: 1px solid #444;
+}
+
+.debug-controls h3 {
+  font-size: 1rem;
+  margin-bottom: 15px;
+  color: #28a745;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+.control-group {
+  margin-bottom: 12px;
+}
+
+.control-group label {
+  display: block;
+  font-size: 0.85rem;
+  margin-bottom: 5px;
+  color: #aaa;
+}
+
+.control-group input[type="range"] {
+  width: 100%;
+}
+
+.checkbox-group {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.checkbox-group input {
+  width: auto;
+}
+
+.checkbox-group label {
+  margin-bottom: 0;
+}
+
+/* ====================== HELP SECTION ====================== */
 .help-section {
   flex: 1;
   font-size: 0.95rem;
@@ -201,6 +248,11 @@ footer {
 .tile.selected {
   outline: 3px solid #FFD700;
   box-shadow: 0 0 15px #FFD700;
+}
+
+.tile.free-debug {
+    background-color: #e3f2fd; /* Light blue */
+    border-color: #2196f3;
 }
 
 /* ====================== MESSAGE AREA ====================== */
