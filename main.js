@@ -438,4 +438,5 @@ window.onload = () => {
     };
 
     initGame();
+    console.log("Mahjong Solitaire v0.21 initialized.");
 };
