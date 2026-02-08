@@ -14,38 +14,51 @@ const tileEmojis = ["🀇","🀈","🀉","🀊","🀋","🀌","🀍","🀎","�
 
 /***********************************************
  * Generate Dynamic Positions for the Level
- * Creates a pyramid-style layout that grows in all dimensions.
+ * Creates a "Turtle" style pyramid layout with staggering.
  ***********************************************/
 function generatePositions(level) {
   let pos = [];
-  const baseCols = 6 + level;
-  const baseRows = 4 + Math.floor(level / 2);
-  const maxLayers = 1 + Math.floor(level / 2);
+  let cols = 6 + level;
+  let rows = 4 + Math.floor(level / 2);
 
-  // Center point for the pyramid in virtual space
-  const centerX = 1000; // Increased virtual space
+  const centerX = 1000;
   const centerY = 800;
+  const unitW = TILE_WIDTH / 2;
+  const unitH = TILE_HEIGHT / 2;
 
-  for (let z = 0; z < maxLayers; z++) {
-    const layerCols = baseCols - z * 2;
-    const layerRows = baseRows - z * 2;
+  let z = 0;
+  while (cols > 0 && rows > 0) {
+    // Staggering: offset by half a tile for every other layer
+    let staggerX = (z % 2) * unitW;
+    let staggerY = (z % 2) * unitH;
 
-    if (layerCols <= 0 || layerRows <= 0) break;
+    let startX = centerX - (cols * TILE_WIDTH) / 2 + staggerX;
+    let startY = centerY - (rows * TILE_HEIGHT) / 2 + staggerY;
 
-    const startX = centerX - (layerCols * 100) / 2;
-    const startY = centerY - (layerRows * 110) / 2;
-
-    for (let row = 0; row < layerRows; row++) {
-      for (let col = 0; col < layerCols; col++) {
+    for (let r = 0; r < rows; r++) {
+      for (let c = 0; c < cols; c++) {
         pos.push({
-          x: startX + col * 100 - z * 5, // Subtle 3D offset
-          y: startY + row * 110 - z * 5,
+          x: startX + c * TILE_WIDTH - z * 6, // 3D visual shift for depth
+          y: startY + r * TILE_HEIGHT - z * 6,
           z: z,
           width: TILE_WIDTH,
           height: TILE_HEIGHT
         });
       }
     }
+
+    z++;
+    // Tapering logic
+    if (cols === 1 && rows === 1) break;
+    if (cols <= 2 || rows <= 2) {
+      cols = 1;
+      rows = 1;
+    } else {
+      cols -= 2;
+      rows -= 2;
+    }
+
+    if (z > 15) break; // Safety break
   }
 
   // Ensure we have an even number of positions for matching pairs
@@ -266,6 +279,7 @@ function checkWinCondition() {
     document.getElementById("message").textContent = "Congratulations! Level " + currentLevel + " cleared!";
     setTimeout(() => {
       currentLevel++;
+      document.getElementById("levelInput").value = currentLevel;
       initGame();
     }, 2000);
   }
@@ -276,17 +290,12 @@ function checkWinCondition() {
  ***********************************************/
 function scaleBoard() {
   const container = document.getElementById("board-container");
-  const wrapper = document.getElementById("game-wrapper");
-  const header = document.querySelector("header");
-  const message = document.getElementById("message");
-  const footer = document.querySelector("footer");
+  const mainContent = document.getElementById("main-content");
 
-  const availableWidth = window.innerWidth - 40;
-  const availableHeight = window.innerHeight - header.offsetHeight - message.offsetHeight - footer.offsetHeight - 40;
+  const availableWidth = mainContent.clientWidth - 40;
+  const availableHeight = mainContent.clientHeight - 80; // Account for message area
 
-  wrapper.style.height = availableHeight + "px";
-
-  // Calculate the actual bounding box of the tiles to determine needed space
+  // Calculate the actual bounding box of the tiles
   let minX = Infinity, maxX = -Infinity, minY = Infinity, maxY = -Infinity;
   tiles.forEach(t => {
     if (!t.removed) {
@@ -303,8 +312,8 @@ function scaleBoard() {
   const maxDistX = Math.max(Math.abs(maxX - containerCenterX), Math.abs(containerCenterX - minX));
   const maxDistY = Math.max(Math.abs(maxY - containerCenterY), Math.abs(containerCenterY - minY));
 
-  const requiredWidth = maxDistX * 2 + 100;
-  const requiredHeight = maxDistY * 2 + 100;
+  const requiredWidth = Math.max(maxDistX * 2, 400) + 100;
+  const requiredHeight = Math.max(maxDistY * 2, 400) + 100;
 
   const scaleX = availableWidth / requiredWidth;
   const scaleY = availableHeight / requiredHeight;
@@ -318,16 +327,25 @@ window.addEventListener("resize", scaleBoard);
 /***********************************************
  * Event Handlers
  ***********************************************/
-document.getElementById("newGameBtn").onclick = () => { currentLevel = 1; initGame(); };
-document.getElementById("levelBtn").onclick = () => {
-  let level = prompt("Enter level number (1+):", currentLevel);
-  if (level && !isNaN(level) && level >= 1) {
-    currentLevel = parseInt(level);
+document.getElementById("newGameBtn").onclick = () => {
+  currentLevel = parseInt(document.getElementById("levelInput").value) || 1;
+  initGame();
+};
+
+document.getElementById("levelInput").onchange = (e) => {
+  let val = parseInt(e.target.value);
+  if (val >= 1) {
+    currentLevel = val;
     initGame();
+  } else {
+    e.target.value = currentLevel;
   }
 };
-document.getElementById("helpBtn").onclick = () => document.getElementById("helpModal").style.display = "block";
-document.getElementById("closeHelp").onclick = () => document.getElementById("helpModal").style.display = "none";
-window.onclick = (e) => { if (e.target === document.getElementById("helpModal")) document.getElementById("helpModal").style.display = "none"; };
+
+document.getElementById("sidebarToggle").onclick = () => {
+  document.getElementById("sidebar").classList.toggle("collapsed");
+  // Recalculate scaling after sidebar transition
+  setTimeout(scaleBoard, 310);
+};
 
 initGame();
