@@ -14,45 +14,45 @@ const tileEmojis = ["🀇","🀈","🀉","🀊","🀋","🀌","🀍","🀎","�
 
 /***********************************************
  * Generate Dynamic Positions for the Level
+ * Creates a pyramid-style layout that grows in all dimensions.
  ***********************************************/
 function generatePositions(level) {
   let pos = [];
-  // Base layout: Level 1 - Layer 0 (7 columns x 4 rows = 28 positions)
-  for (let row = 0; row < 4; row++) {
-    for (let col = 0; col < 7; col++) {
-      pos.push({
-        x: 150 + col * 100,
-        y: 50 + row * 110,
-        z: 0,
-        width: TILE_WIDTH,
-        height: TILE_HEIGHT
-      });
+  const baseCols = 6 + level;
+  const baseRows = 4 + Math.floor(level / 2);
+  const maxLayers = 1 + Math.floor(level / 2);
+
+  // Center point for the pyramid in virtual space
+  const centerX = 1000; // Increased virtual space
+  const centerY = 800;
+
+  for (let z = 0; z < maxLayers; z++) {
+    const layerCols = baseCols - z * 2;
+    const layerRows = baseRows - z * 2;
+
+    if (layerCols <= 0 || layerRows <= 0) break;
+
+    const startX = centerX - (layerCols * 100) / 2;
+    const startY = centerY - (layerRows * 110) / 2;
+
+    for (let row = 0; row < layerRows; row++) {
+      for (let col = 0; col < layerCols; col++) {
+        pos.push({
+          x: startX + col * 100 - z * 5, // Subtle 3D offset
+          y: startY + row * 110 - z * 5,
+          z: z,
+          width: TILE_WIDTH,
+          height: TILE_HEIGHT
+        });
+      }
     }
   }
-  // Base layout: Level 1 - Layer 1 (2 rows x 4 columns = 8 positions)
-  for (let row = 0; row < 2; row++) {
-    for (let col = 0; col < 4; col++) {
-      pos.push({
-        x: 300 + col * 100,
-        y: 150 + row * 110,
-        z: 1,
-        width: TILE_WIDTH,
-        height: TILE_HEIGHT
-      });
-    }
+
+  // Ensure we have an even number of positions for matching pairs
+  if (pos.length % 2 !== 0) {
+    pos.pop();
   }
-  // For each extra level beyond 1, add 4 positions (one extra layer per level).
-  for (let extra = 0; extra < level - 1; extra++) {
-    for (let col = 0; col < 4; col++) {
-      pos.push({
-        x: 250 + col * 100,
-        y: 300 + extra * 110,
-        z: 2 + extra,
-        width: TILE_WIDTH,
-        height: TILE_HEIGHT
-      });
-    }
-  }
+
   return pos;
 }
 
@@ -276,15 +276,38 @@ function checkWinCondition() {
  ***********************************************/
 function scaleBoard() {
   const container = document.getElementById("board-container");
+  const wrapper = document.getElementById("game-wrapper");
   const header = document.querySelector("header");
   const message = document.getElementById("message");
   const footer = document.querySelector("footer");
 
   const availableWidth = window.innerWidth - 40;
-  const availableHeight = window.innerHeight - header.offsetHeight - message.offsetHeight - footer.offsetHeight - 100;
+  const availableHeight = window.innerHeight - header.offsetHeight - message.offsetHeight - footer.offsetHeight - 40;
 
-  const scaleX = availableWidth / 1000;
-  const scaleY = availableHeight / 800;
+  wrapper.style.height = availableHeight + "px";
+
+  // Calculate the actual bounding box of the tiles to determine needed space
+  let minX = Infinity, maxX = -Infinity, minY = Infinity, maxY = -Infinity;
+  tiles.forEach(t => {
+    if (!t.removed) {
+      minX = Math.min(minX, t.x);
+      maxX = Math.max(maxX, t.x + t.width);
+      minY = Math.min(minY, t.y);
+      maxY = Math.max(maxY, t.y + t.height);
+    }
+  });
+
+  const containerCenterX = 1000;
+  const containerCenterY = 800;
+
+  const maxDistX = Math.max(Math.abs(maxX - containerCenterX), Math.abs(containerCenterX - minX));
+  const maxDistY = Math.max(Math.abs(maxY - containerCenterY), Math.abs(containerCenterY - minY));
+
+  const requiredWidth = maxDistX * 2 + 100;
+  const requiredHeight = maxDistY * 2 + 100;
+
+  const scaleX = availableWidth / requiredWidth;
+  const scaleY = availableHeight / requiredHeight;
   const scale = Math.min(scaleX, scaleY, 1);
 
   container.style.transform = `scale(${scale})`;

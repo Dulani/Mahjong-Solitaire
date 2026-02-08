@@ -30,17 +30,29 @@ button {
 }
 button:hover { background-color: #218838; }
 
-/* ====================== BOARD CONTAINER ====================== */
-/* The board-container holds the tile layout and is centered. */
-#board-container {
+/* ====================== GAME WRAPPER & BOARD CONTAINER ====================== */
+#game-wrapper {
+  width: 100%;
+  flex: 1; /* Take up available space */
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  overflow: hidden;
   position: relative;
-  margin: 0 auto;
-  width: 1000px; /* Fixed width for scaling purposes */
-  height: 800px; /* Increased height to accommodate more levels */
+}
+
+#board-container {
+  position: absolute;
+  width: 2000px; /* Large virtual space */
+  height: 1600px;
   background-color: #2a2a2a;
   border: 2px solid #333;
-  transform-origin: top center;
+  transform-origin: center center;
   transition: transform 0.3s ease;
+  left: 50%;
+  top: 50%;
+  margin-left: -1000px;
+  margin-top: -800px;
 }
 
 /* ====================== TILE STYLING ====================== */
