@@ -12,6 +12,8 @@ let ROTATION_X = 45;
 let ROTATION_Y = 0;
 let ROTATION_Z = 0;
 let ZOOM_FACTOR = 1.0;
+let PAN_X = 50;
+let PAN_Y = 50;
 let SHOW_FREE_TILES = true;
 const TILE_THICKNESS = 20;
 
@@ -324,7 +326,10 @@ function checkWinCondition() {
 function scaleBoard() {
   const container = document.getElementById("board-container");
   const mainContent = document.getElementById("main-content");
-  if (!container || !mainContent) return;
+  const wrapper = document.getElementById("game-wrapper");
+  if (!container || !mainContent || !wrapper) return;
+
+  wrapper.style.perspectiveOrigin = `${PAN_X}% ${PAN_Y}%`;
 
   const availableWidth = mainContent.clientWidth - 40;
   const availableHeight = mainContent.clientHeight - 80;
@@ -351,11 +356,15 @@ function updatePerspective() {
     ROTATION_Y = parseFloat(document.getElementById("perspY").value);
     ROTATION_Z = parseFloat(document.getElementById("perspZ").value);
     ZOOM_FACTOR = parseFloat(document.getElementById("zoomRange").value);
+    PAN_X = parseFloat(document.getElementById("panX").value);
+    PAN_Y = parseFloat(document.getElementById("panY").value);
 
     document.getElementById("valX").textContent = ROTATION_X + "°";
     document.getElementById("valY").textContent = ROTATION_Y + "°";
     document.getElementById("valZ").textContent = ROTATION_Z + "°";
     document.getElementById("valZoom").textContent = ZOOM_FACTOR.toFixed(1) + "x";
+    document.getElementById("valPanX").textContent = PAN_X + "%";
+    document.getElementById("valPanY").textContent = PAN_Y + "%";
 
     scaleBoard();
 }
@@ -398,6 +407,12 @@ window.onload = () => {
 
     const zoomRange = document.getElementById("zoomRange");
     if (zoomRange) zoomRange.oninput = updatePerspective;
+
+    const panX = document.getElementById("panX");
+    if (panX) panX.oninput = updatePerspective;
+
+    const panY = document.getElementById("panY");
+    if (panY) panY.oninput = updatePerspective;
 
     const showDebug = document.getElementById("showDebug");
     const debugControls = document.querySelector(".debug-controls");
