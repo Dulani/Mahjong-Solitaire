@@ -3,7 +3,7 @@
  ***********************************************/
 let tiles = [];            // Array containing all tile objects.
 let selectedTileId = null; // Id of the currently selected tile.
-let currentLevel = 1;      // Start at Level 1.
+let currentLevel = 5;      // Start at Level 5.
 const TILE_WIDTH = 80;
 const TILE_HEIGHT = 100;
 
@@ -14,32 +14,26 @@ const tileEmojis = ["🀇","🀈","🀉","🀊","🀋","🀌","🀍","🀎","�
 
 /***********************************************
  * Generate Dynamic Positions for the Level
- * Creates a pyramid-style layout that grows in all dimensions.
+ * Creates a tapering pyramid where tiles are stacked directly on top of each other.
  ***********************************************/
 function generatePositions(level) {
-  let pos = [];
-  const baseCols = 6 + level;
-  const baseRows = 4 + Math.floor(level / 2);
-  const maxLayers = 1 + Math.floor(level / 2);
+  const pos = [];
 
-  // Center point for the pyramid in virtual space
-  const centerX = 1000; // Increased virtual space
-  const centerY = 800;
+  for (let z = 0; z < level; z++) {
+    const diff = (level - 1 - z);
+    // Last layer is 1x1, second-to-last is 2x2, then it grows by 2 each layer down.
+    const width = (diff === 0) ? 1 : diff * 2;
+    const height = (diff === 0) ? 1 : diff * 2;
 
-  for (let z = 0; z < maxLayers; z++) {
-    const layerCols = baseCols - z * 2;
-    const layerRows = baseRows - z * 2;
+    // Offset for centering the layer
+    const offsetX = 1000 - (width * TILE_WIDTH) / 2;
+    const offsetY = 800 - (height * TILE_HEIGHT) / 2;
 
-    if (layerCols <= 0 || layerRows <= 0) break;
-
-    const startX = centerX - (layerCols * 100) / 2;
-    const startY = centerY - (layerRows * 110) / 2;
-
-    for (let row = 0; row < layerRows; row++) {
-      for (let col = 0; col < layerCols; col++) {
+    for (let r = 0; r < height; r++) {
+      for (let c = 0; c < width; c++) {
         pos.push({
-          x: startX + col * 100 - z * 5, // Subtle 3D offset
-          y: startY + row * 110 - z * 5,
+          x: offsetX + c * TILE_WIDTH + (z * 6), // (z*6) for 3D visual shift
+          y: offsetY + r * TILE_HEIGHT - (z * 6),
           z: z,
           width: TILE_WIDTH,
           height: TILE_HEIGHT
@@ -48,9 +42,11 @@ function generatePositions(level) {
     }
   }
 
-  // Ensure we have an even number of positions for matching pairs
+  // Ensure even number of tiles for matching.
+  // We shift() instead of pop() to remove a tile from the bottom layer if necessary,
+  // which helps preserve the single top tile.
   if (pos.length % 2 !== 0) {
-    pos.pop();
+    pos.shift();
   }
 
   return pos;
@@ -266,6 +262,7 @@ function checkWinCondition() {
     document.getElementById("message").textContent = "Congratulations! Level " + currentLevel + " cleared!";
     setTimeout(() => {
       currentLevel++;
+      document.getElementById("levelInput").value = currentLevel;
       initGame();
     }, 2000);
   }
@@ -276,17 +273,12 @@ function checkWinCondition() {
  ***********************************************/
 function scaleBoard() {
   const container = document.getElementById("board-container");
-  const wrapper = document.getElementById("game-wrapper");
-  const header = document.querySelector("header");
-  const message = document.getElementById("message");
-  const footer = document.querySelector("footer");
+  const mainContent = document.getElementById("main-content");
 
-  const availableWidth = window.innerWidth - 40;
-  const availableHeight = window.innerHeight - header.offsetHeight - message.offsetHeight - footer.offsetHeight - 40;
+  const availableWidth = mainContent.clientWidth - 40;
+  const availableHeight = mainContent.clientHeight - 80; // Account for message area
 
-  wrapper.style.height = availableHeight + "px";
-
-  // Calculate the actual bounding box of the tiles to determine needed space
+  // Calculate the actual bounding box of the tiles
   let minX = Infinity, maxX = -Infinity, minY = Infinity, maxY = -Infinity;
   tiles.forEach(t => {
     if (!t.removed) {
@@ -303,8 +295,8 @@ function scaleBoard() {
   const maxDistX = Math.max(Math.abs(maxX - containerCenterX), Math.abs(containerCenterX - minX));
   const maxDistY = Math.max(Math.abs(maxY - containerCenterY), Math.abs(containerCenterY - minY));
 
-  const requiredWidth = maxDistX * 2 + 100;
-  const requiredHeight = maxDistY * 2 + 100;
+  const requiredWidth = Math.max(maxDistX * 2, 400) + 100;
+  const requiredHeight = Math.max(maxDistY * 2, 400) + 100;
 
   const scaleX = availableWidth / requiredWidth;
   const scaleY = availableHeight / requiredHeight;
@@ -318,16 +310,25 @@ window.addEventListener("resize", scaleBoard);
 /***********************************************
  * Event Handlers
  ***********************************************/
-document.getElementById("newGameBtn").onclick = () => { currentLevel = 1; initGame(); };
-document.getElementById("levelBtn").onclick = () => {
-  let level = prompt("Enter level number (1+):", currentLevel);
-  if (level && !isNaN(level) && level >= 1) {
-    currentLevel = parseInt(level);
+document.getElementById("newGameBtn").onclick = () => {
+  currentLevel = parseInt(document.getElementById("levelInput").value) || 1;
+  initGame();
+};
+
+document.getElementById("levelInput").onchange = (e) => {
+  let val = parseInt(e.target.value);
+  if (val >= 1) {
+    currentLevel = val;
     initGame();
+  } else {
+    e.target.value = currentLevel;
   }
 };
-document.getElementById("helpBtn").onclick = () => document.getElementById("helpModal").style.display = "block";
-document.getElementById("closeHelp").onclick = () => document.getElementById("helpModal").style.display = "none";
-window.onclick = (e) => { if (e.target === document.getElementById("helpModal")) document.getElementById("helpModal").style.display = "none"; };
+
+document.getElementById("sidebarToggle").onclick = () => {
+  document.getElementById("sidebar").classList.toggle("collapsed");
+  // Recalculate scaling after sidebar transition
+  setTimeout(scaleBoard, 310);
+};
 
 initGame();
