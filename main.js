@@ -8,9 +8,10 @@ const TILE_WIDTH = 80;
 const TILE_HEIGHT = 100;
 
 // Perspective and Debug state
-let OFFSET_3D_X = 6;
-let OFFSET_3D_Y = -6;
+let ROTATION_X = 45;
+let ROTATION_Y = 0;
 let SHOW_FREE_TILES = true;
+const TILE_THICKNESS = 20;
 
 // Define a comprehensive set of Mahjong tile emojis (used as keys for SVG generation).
 const tileEmojis = ["🀇","🀈","🀉","🀊","🀋","🀌","🀍","🀎","🀏",
@@ -141,15 +142,20 @@ function renderTiles() {
         tileDiv.classList.add("selected");
       }
 
-      tileDiv.innerHTML = getTileSVG(tile.type);
+      // Add faces for 3D thickness
+      tileDiv.innerHTML = `
+        <div class="tile-face tile-top">${getTileSVG(tile.type)}</div>
+        <div class="tile-face tile-bottom"></div>
+        <div class="tile-face tile-front"></div>
+        <div class="tile-face tile-back"></div>
+        <div class="tile-face tile-left"></div>
+        <div class="tile-face tile-right"></div>
+      `;
 
-      // Calculate visual position
-      const vx = tile.lx + tile.z * OFFSET_3D_X;
-      const vy = tile.ly + tile.z * OFFSET_3D_Y;
+      // Position in 3D space
+      const tz = tile.z * TILE_THICKNESS;
+      tileDiv.style.transform = `translate3d(${tile.lx}px, ${tile.ly}px, ${tz}px)`;
 
-      tileDiv.style.left = vx + "px";
-      tileDiv.style.top = vy + "px";
-      tileDiv.style.zIndex = tile.z;
       tileDiv.onclick = () => handleTileClick(tile.id);
       board.appendChild(tileDiv);
     }
@@ -321,37 +327,15 @@ function scaleBoard() {
   const availableWidth = mainContent.clientWidth - 40;
   const availableHeight = mainContent.clientHeight - 80;
 
-  // Calculate the actual bounding box of the tiles (visual positions)
-  let minX = Infinity, maxX = -Infinity, minY = Infinity, maxY = -Infinity;
-  let count = 0;
-  tiles.forEach(t => {
-    if (!t.removed) {
-      const vx = t.lx + t.z * OFFSET_3D_X;
-      const vy = t.ly + t.z * OFFSET_3D_Y;
-      minX = Math.min(minX, vx);
-      maxX = Math.max(maxX, vx + t.width);
-      minY = Math.min(minY, vy);
-      maxY = Math.max(maxY, vy + t.height);
-      count++;
-    }
-  });
+  // Fixed bounding box for the virtual 2000x1600 space
+  const boardWidth = 2000;
+  const boardHeight = 1600;
 
-  if (count === 0) return;
+  const scaleX = availableWidth / boardWidth;
+  const scaleY = availableHeight / boardHeight;
+  const scale = Math.min(scaleX, scaleY, 0.8); // 0.8 to leave some margin
 
-  const containerCenterX = 1000;
-  const containerCenterY = 800;
-
-  const maxDistX = Math.max(Math.abs(maxX - containerCenterX), Math.abs(containerCenterX - minX));
-  const maxDistY = Math.max(Math.abs(maxY - containerCenterY), Math.abs(containerCenterY - minY));
-
-  const requiredWidth = Math.max(maxDistX * 2, 400) + 150;
-  const requiredHeight = Math.max(maxDistY * 2, 400) + 150;
-
-  const scaleX = availableWidth / requiredWidth;
-  const scaleY = availableHeight / requiredHeight;
-  const scale = Math.min(scaleX, scaleY, 1);
-
-  container.style.transform = `scale(${scale})`;
+  container.style.transform = `scale(${scale}) rotateX(${ROTATION_X}deg) rotateY(${ROTATION_Y}deg)`;
 }
 
 window.addEventListener("resize", scaleBoard);
@@ -360,11 +344,10 @@ window.addEventListener("resize", scaleBoard);
  * Perspective Handlers
  ***********************************************/
 function updatePerspective() {
-    OFFSET_3D_X = parseFloat(document.getElementById("perspX").value);
-    OFFSET_3D_Y = parseFloat(document.getElementById("perspY").value);
-    document.getElementById("valX").textContent = OFFSET_3D_X;
-    document.getElementById("valY").textContent = OFFSET_3D_Y;
-    renderTiles();
+    ROTATION_X = parseFloat(document.getElementById("perspX").value);
+    ROTATION_Y = parseFloat(document.getElementById("perspY").value);
+    document.getElementById("valX").textContent = ROTATION_X + "°";
+    document.getElementById("valY").textContent = ROTATION_Y + "°";
     scaleBoard();
 }
 
