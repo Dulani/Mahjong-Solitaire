@@ -7,6 +7,11 @@ let currentLevel = 5;      // Start at Level 5.
 const TILE_WIDTH = 80;
 const TILE_HEIGHT = 100;
 
+// Perspective and Debug state
+let OFFSET_3D_X = 6;
+let OFFSET_3D_Y = -6;
+let SHOW_FREE_TILES = true;
+
 // Define a comprehensive set of Mahjong tile emojis (used as keys for SVG generation).
 const tileEmojis = ["🀇","🀈","🀉","🀊","🀋","🀌","🀍","🀎","🀏",
                     "🀐","🀑","🀒","🀓","🀔","🀕","🀖","🀗","🀘",
@@ -25,28 +30,40 @@ function generatePositions(level) {
     const width = (diff === 0) ? 1 : diff * 2;
     const height = (diff === 0) ? 1 : diff * 2;
 
-    // Offset for centering the layer
+    // Offset for centering the layer (Logical coordinates)
     const offsetX = 1000 - (width * TILE_WIDTH) / 2;
     const offsetY = 800 - (height * TILE_HEIGHT) / 2;
 
     for (let r = 0; r < height; r++) {
       for (let c = 0; c < width; c++) {
         pos.push({
-          x: offsetX + c * TILE_WIDTH + (z * 6), // (z*6) for 3D visual shift
-          y: offsetY + r * TILE_HEIGHT - (z * 6),
-          z: z,
-          width: TILE_WIDTH,
-          height: TILE_HEIGHT
+          lx: offsetX + c * TILE_WIDTH, // Logical X
+          ly: offsetY + r * TILE_HEIGHT, // Logical Y
+          z: z
         });
       }
     }
   }
 
   // Ensure even number of tiles for matching.
-  // We shift() instead of pop() to remove a tile from the bottom layer if necessary,
-  // which helps preserve the single top tile.
   if (pos.length % 2 !== 0) {
-    pos.shift();
+    // To avoid "missing corner" bugs, we remove an internal tile from the bottom layer.
+    // Bottom layer is the beginning of the 'pos' array.
+    const bottomLayerDiff = level - 1;
+    const bottomWidth = (bottomLayerDiff === 0) ? 1 : bottomLayerDiff * 2;
+    const bottomHeight = (bottomLayerDiff === 0) ? 1 : bottomLayerDiff * 2;
+    const bottomCount = bottomWidth * bottomHeight;
+
+    if (bottomCount > 1) {
+      // Remove a tile near the center of the bottom layer to keep it hidden
+      const midR = Math.floor(bottomHeight / 2);
+      const midC = Math.floor(bottomWidth / 2);
+      const midIdx = midR * bottomWidth + midC;
+      pos.splice(midIdx, 1);
+    } else {
+      // Fallback for very small levels
+      pos.shift();
+    }
   }
 
   return pos;
@@ -77,15 +94,15 @@ function initGame() {
   shuffle(tileTypes);
 
   for (let i = 0; i < positions.length; i++) {
-    let pos = positions[i];
+    let p = positions[i];
     let tile = {
       id: i,
       type: tileTypes[i],
-      x: pos.x,
-      y: pos.y,
-      z: pos.z,
-      width: pos.width,
-      height: pos.height,
+      lx: p.lx,
+      ly: p.ly,
+      z: p.z,
+      width: TILE_WIDTH,
+      height: TILE_HEIGHT,
       removed: false
     };
     tiles.push(tile);
@@ -114,12 +131,24 @@ function renderTiles() {
     if (!tile.removed) {
       let tileDiv = document.createElement("div");
       tileDiv.className = "tile";
+
+      const isFree = isTileFree(tile);
+      if (SHOW_FREE_TILES && isFree) {
+        tileDiv.classList.add("free-debug");
+      }
+
       if (tile.id === selectedTileId) {
         tileDiv.classList.add("selected");
       }
+
       tileDiv.innerHTML = getTileSVG(tile.type);
-      tileDiv.style.left = tile.x + "px";
-      tileDiv.style.top = tile.y + "px";
+
+      // Calculate visual position
+      const vx = tile.lx + tile.z * OFFSET_3D_X;
+      const vy = tile.ly + tile.z * OFFSET_3D_Y;
+
+      tileDiv.style.left = vx + "px";
+      tileDiv.style.top = vy + "px";
       tileDiv.style.zIndex = tile.z;
       tileDiv.onclick = () => handleTileClick(tile.id);
       board.appendChild(tileDiv);
@@ -193,9 +222,15 @@ function getTileSVG(emoji) {
  ***********************************************/
 function isTileFree(tile) {
   if (tile.removed) return false;
+
+  // 1. Check if any tile is on top (using logical coordinates)
   for (let other of tiles) {
-    if (!other.removed && other.z > tile.z && isOverlap(tile, other)) return false;
+    if (!other.removed && other.z > tile.z) {
+      if (isOverlap(tile, other)) return false;
+    }
   }
+
+  // 2. Check if left or right side is open (at the same level)
   let leftBlocked = false;
   let rightBlocked = false;
   for (let other of tiles) {
@@ -208,20 +243,21 @@ function isTileFree(tile) {
 }
 
 function isOverlap(tile1, tile2) {
-  return (tile1.x < tile2.x + tile2.width && tile1.x + tile1.width > tile2.x &&
-          tile1.y < tile2.y + tile2.height && tile1.y + tile1.height > tile2.y);
+  // Use logical coordinates for logical overlap
+  return (tile1.lx < tile2.lx + tile2.width && tile1.lx + tile1.width > tile2.lx &&
+          tile1.ly < tile2.ly + tile2.height && tile1.ly + tile1.height > tile2.ly);
 }
 
 function isTouchingLeft(tile, other) {
-  return (other.x + other.width >= tile.x - 10 && other.x + other.width <= tile.x + 10 && verticalOverlap(tile, other));
+  return (other.lx + other.width >= tile.lx - 5 && other.lx + other.width <= tile.lx + 5 && verticalOverlap(tile, other));
 }
 
 function isTouchingRight(tile, other) {
-  return (other.x <= tile.x + tile.width + 10 && other.x >= tile.x + tile.width - 10 && verticalOverlap(tile, other));
+  return (other.lx <= tile.lx + tile.width + 5 && other.lx >= tile.lx + tile.width - 5 && verticalOverlap(tile, other));
 }
 
 function verticalOverlap(tile, other) {
-  return (tile.y < other.y + other.height && tile.y + tile.height > other.y);
+  return (tile.ly < other.ly + other.height && tile.ly + tile.height > other.ly);
 }
 
 /***********************************************
@@ -230,10 +266,15 @@ function verticalOverlap(tile, other) {
 function handleTileClick(tileId) {
   let tile = tiles.find(t => t.id === tileId);
   if (!tile || tile.removed) return;
-  if (!isTileFree(tile)) {
+
+  const isFree = isTileFree(tile);
+  console.log(`Tile Clicked: ID=${tile.id}, Type=${tile.type}, LX=${tile.lx}, LY=${tile.ly}, Z=${tile.z}, Free=${isFree}`);
+
+  if (!isFree) {
     document.getElementById("message").textContent = "Tile is not free.";
     return;
   }
+
   if (selectedTileId === null) {
     selectedTileId = tileId;
     document.getElementById("message").textContent = "Selected a tile. Click on its match.";
@@ -262,7 +303,8 @@ function checkWinCondition() {
     document.getElementById("message").textContent = "Congratulations! Level " + currentLevel + " cleared!";
     setTimeout(() => {
       currentLevel++;
-      document.getElementById("levelInput").value = currentLevel;
+      const input = document.getElementById("levelInput");
+      if (input) input.value = currentLevel;
       initGame();
     }, 2000);
   }
@@ -274,20 +316,27 @@ function checkWinCondition() {
 function scaleBoard() {
   const container = document.getElementById("board-container");
   const mainContent = document.getElementById("main-content");
+  if (!container || !mainContent) return;
 
   const availableWidth = mainContent.clientWidth - 40;
-  const availableHeight = mainContent.clientHeight - 80; // Account for message area
+  const availableHeight = mainContent.clientHeight - 80;
 
-  // Calculate the actual bounding box of the tiles
+  // Calculate the actual bounding box of the tiles (visual positions)
   let minX = Infinity, maxX = -Infinity, minY = Infinity, maxY = -Infinity;
+  let count = 0;
   tiles.forEach(t => {
     if (!t.removed) {
-      minX = Math.min(minX, t.x);
-      maxX = Math.max(maxX, t.x + t.width);
-      minY = Math.min(minY, t.y);
-      maxY = Math.max(maxY, t.y + t.height);
+      const vx = t.lx + t.z * OFFSET_3D_X;
+      const vy = t.ly + t.z * OFFSET_3D_Y;
+      minX = Math.min(minX, vx);
+      maxX = Math.max(maxX, vx + t.width);
+      minY = Math.min(minY, vy);
+      maxY = Math.max(maxY, vy + t.height);
+      count++;
     }
   });
+
+  if (count === 0) return;
 
   const containerCenterX = 1000;
   const containerCenterY = 800;
@@ -295,8 +344,8 @@ function scaleBoard() {
   const maxDistX = Math.max(Math.abs(maxX - containerCenterX), Math.abs(containerCenterX - minX));
   const maxDistY = Math.max(Math.abs(maxY - containerCenterY), Math.abs(containerCenterY - minY));
 
-  const requiredWidth = Math.max(maxDistX * 2, 400) + 100;
-  const requiredHeight = Math.max(maxDistY * 2, 400) + 100;
+  const requiredWidth = Math.max(maxDistX * 2, 400) + 150;
+  const requiredHeight = Math.max(maxDistY * 2, 400) + 150;
 
   const scaleX = availableWidth / requiredWidth;
   const scaleY = availableHeight / requiredHeight;
@@ -308,27 +357,55 @@ function scaleBoard() {
 window.addEventListener("resize", scaleBoard);
 
 /***********************************************
+ * Perspective Handlers
+ ***********************************************/
+function updatePerspective() {
+    OFFSET_3D_X = parseFloat(document.getElementById("perspX").value);
+    OFFSET_3D_Y = parseFloat(document.getElementById("perspY").value);
+    document.getElementById("valX").textContent = OFFSET_3D_X;
+    document.getElementById("valY").textContent = OFFSET_3D_Y;
+    renderTiles();
+    scaleBoard();
+}
+
+/***********************************************
  * Event Handlers
  ***********************************************/
-document.getElementById("newGameBtn").onclick = () => {
-  currentLevel = parseInt(document.getElementById("levelInput").value) || 1;
-  initGame();
-};
+window.onload = () => {
+    const newGameBtn = document.getElementById("newGameBtn");
+    if (newGameBtn) newGameBtn.onclick = () => {
+        currentLevel = parseInt(document.getElementById("levelInput").value) || 5;
+        initGame();
+    };
 
-document.getElementById("levelInput").onchange = (e) => {
-  let val = parseInt(e.target.value);
-  if (val >= 1) {
-    currentLevel = val;
+    const levelInput = document.getElementById("levelInput");
+    if (levelInput) levelInput.onchange = (e) => {
+        let val = parseInt(e.target.value);
+        if (val >= 2) {
+            currentLevel = val;
+            initGame();
+        } else {
+            e.target.value = currentLevel;
+        }
+    };
+
+    const sidebarToggle = document.getElementById("sidebarToggle");
+    if (sidebarToggle) sidebarToggle.onclick = () => {
+        document.getElementById("sidebar").classList.toggle("collapsed");
+        setTimeout(scaleBoard, 310);
+    };
+
+    const perspX = document.getElementById("perspX");
+    if (perspX) perspX.oninput = updatePerspective;
+
+    const perspY = document.getElementById("perspY");
+    if (perspY) perspY.oninput = updatePerspective;
+
+    const debugToggle = document.getElementById("debugToggle");
+    if (debugToggle) debugToggle.onchange = (e) => {
+        SHOW_FREE_TILES = e.target.checked;
+        renderTiles();
+    };
+
     initGame();
-  } else {
-    e.target.value = currentLevel;
-  }
 };
-
-document.getElementById("sidebarToggle").onclick = () => {
-  document.getElementById("sidebar").classList.toggle("collapsed");
-  // Recalculate scaling after sidebar transition
-  setTimeout(scaleBoard, 310);
-};
-
-initGame();
