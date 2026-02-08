@@ -10,6 +10,8 @@ const TILE_HEIGHT = 100;
 // Perspective and Debug state
 let ROTATION_X = 45;
 let ROTATION_Y = 0;
+let ROTATION_Z = 0;
+let ZOOM_FACTOR = 1.0;
 let SHOW_FREE_TILES = true;
 const TILE_THICKNESS = 20;
 
@@ -333,9 +335,10 @@ function scaleBoard() {
 
   const scaleX = availableWidth / boardWidth;
   const scaleY = availableHeight / boardHeight;
-  const scale = Math.min(scaleX, scaleY, 0.8); // 0.8 to leave some margin
+  const baseScale = Math.min(scaleX, scaleY, 0.8); // 0.8 to leave some margin
+  const scale = baseScale * ZOOM_FACTOR;
 
-  container.style.transform = `scale(${scale}) rotateX(${ROTATION_X}deg) rotateY(${ROTATION_Y}deg)`;
+  container.style.transform = `scale(${scale}) rotateX(${ROTATION_X}deg) rotateY(${ROTATION_Y}deg) rotateZ(${ROTATION_Z}deg)`;
 }
 
 window.addEventListener("resize", scaleBoard);
@@ -346,8 +349,14 @@ window.addEventListener("resize", scaleBoard);
 function updatePerspective() {
     ROTATION_X = parseFloat(document.getElementById("perspX").value);
     ROTATION_Y = parseFloat(document.getElementById("perspY").value);
+    ROTATION_Z = parseFloat(document.getElementById("perspZ").value);
+    ZOOM_FACTOR = parseFloat(document.getElementById("zoomRange").value);
+
     document.getElementById("valX").textContent = ROTATION_X + "°";
     document.getElementById("valY").textContent = ROTATION_Y + "°";
+    document.getElementById("valZ").textContent = ROTATION_Z + "°";
+    document.getElementById("valZoom").textContent = ZOOM_FACTOR.toFixed(1) + "x";
+
     scaleBoard();
 }
 
@@ -383,6 +392,29 @@ window.onload = () => {
 
     const perspY = document.getElementById("perspY");
     if (perspY) perspY.oninput = updatePerspective;
+
+    const perspZ = document.getElementById("perspZ");
+    if (perspZ) perspZ.oninput = updatePerspective;
+
+    const zoomRange = document.getElementById("zoomRange");
+    if (zoomRange) zoomRange.oninput = updatePerspective;
+
+    const showDebug = document.getElementById("showDebug");
+    const debugControls = document.querySelector(".debug-controls");
+    if (showDebug && debugControls) {
+        showDebug.onchange = (e) => {
+            if (e.target.checked) {
+                debugControls.classList.remove("hidden");
+            } else {
+                debugControls.classList.add("hidden");
+            }
+            setTimeout(scaleBoard, 310);
+        };
+        // Initial state: hide if not checked
+        if (!showDebug.checked) {
+            debugControls.classList.add("hidden");
+        }
+    }
 
     const debugToggle = document.getElementById("debugToggle");
     if (debugToggle) debugToggle.onchange = (e) => {
