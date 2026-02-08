@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Mahjong Solitaire – Final Release</title>
-  <link rel="stylesheet" href="style.css?v=0.21">
+  <link rel="stylesheet" href="style.css?v=0.22">
 </head>
 <body>
   <!-- SIDEBAR TOGGLE BUTTON -->
@@ -14,7 +14,7 @@
     <!-- SIDEBAR -->
     <aside id="sidebar" class="sidebar">
       <div class="sidebar-content">
-        <h1 title="v0.21">Mahjong Solitaire</h1>
+        <h1 title="v0.22">Mahjong Solitaire</h1>
 
         <div class="controls">
           <button id="newGameBtn">New Game</button>
@@ -27,8 +27,8 @@
         <div class="debug-controls">
           <h3>Camera & Debug</h3>
           <div class="control-group">
-            <label>Tilt (X): <span id="valX">45°</span></label>
-            <input type="range" id="perspX" min="0" max="90" step="1" value="45">
+            <label>Tilt (X): <span id="valX">10°</span></label>
+            <input type="range" id="perspX" min="0" max="90" step="1" value="10">
           </div>
           <div class="control-group">
             <label>Rotation (Y): <span id="valY">0°</span></label>
@@ -39,16 +39,16 @@
             <input type="range" id="perspZ" min="-180" max="180" step="1" value="0">
           </div>
           <div class="control-group">
-            <label>Zoom: <span id="valZoom">1.0x</span></label>
-            <input type="range" id="zoomRange" min="0.1" max="3" step="0.1" value="1">
+            <label>Zoom: <span id="valZoom">2.0x</span></label>
+            <input type="range" id="zoomRange" min="0.1" max="3" step="0.1" value="2">
           </div>
           <div class="control-group">
-            <label>Pan X: <span id="valPanX">50%</span></label>
-            <input type="range" id="panX" min="0" max="100" step="1" value="50">
+            <label>Pan X: <span id="valPanX">100%</span></label>
+            <input type="range" id="panX" min="0" max="100" step="1" value="100">
           </div>
           <div class="control-group">
-            <label>Pan Y: <span id="valPanY">50%</span></label>
-            <input type="range" id="panY" min="0" max="100" step="1" value="50">
+            <label>Pan Y: <span id="valPanY">100%</span></label>
+            <input type="range" id="panY" min="0" max="100" step="1" value="100">
           </div>
           <div class="control-group checkbox-group">
             <input type="checkbox" id="debugToggle" checked>
@@ -91,6 +91,6 @@
     </main>
   </div>
   
-  <script src="main.js?v=0.21"></script>
+  <script src="main.js?v=0.22"></script>
 </body>
 </html>
