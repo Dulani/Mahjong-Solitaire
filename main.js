@@ -119,11 +119,16 @@ function generatePositions(level) {
 
   // Ensure even number of tiles for matching.
   if (pos.length % 2 !== 0) {
-    // Remove a tile near the center of the bottom layer
+    // Remove a tile from the bottom layer.
+    // We pick the one closest to the center (CX, CY) so it's likely covered by upper layers.
     const bottomTiles = pos.filter(p => p.z === 0);
     if (bottomTiles.length > 1) {
-      const midIdx = Math.floor(bottomTiles.length / 2);
-      const tileToRemove = bottomTiles[midIdx];
+      bottomTiles.sort((a, b) => {
+        const distA = Math.pow(a.lx - CX, 2) + Math.pow(a.ly - CY, 2);
+        const distB = Math.pow(b.lx - CX, 2) + Math.pow(b.ly - CY, 2);
+        return distA - distB;
+      });
+      const tileToRemove = bottomTiles[0];
       const idx = pos.indexOf(tileToRemove);
       pos.splice(idx, 1);
     } else {
