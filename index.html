@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Mahjong Solitaire – Final Release</title>
-  <link rel="stylesheet" href="style.css?v=0.26">
+  <link rel="stylesheet" href="style.css?v=0.27">
 </head>
 <body>
   <!-- SIDEBAR TOGGLE BUTTON -->
@@ -14,7 +14,7 @@
     <!-- SIDEBAR -->
     <aside id="sidebar" class="sidebar">
       <div class="sidebar-content">
-        <h1 title="v0.26">Mahjong Solitaire</h1>
+        <h1 title="v0.27">Mahjong Solitaire</h1>
 
         <div class="controls">
           <button id="newGameBtn">New Game</button>
@@ -22,6 +22,19 @@
             <label for="levelInput">Level:</label>
             <input type="number" id="levelInput" min="2" value="7">
           </div>
+        </div>
+
+        <div class="help-section">
+          <h2>How to Play</h2>
+          <p>
+            <strong>Goal:</strong> Remove all matching pairs of tiles from the board.
+          </p>
+          <p>
+            <strong>Rules:</strong><br>
+            - Tiles are removed in pairs if they match exactly.<br>
+            - A tile is <em>free</em> if it has no tile on top and its left or right side is open.<br>
+            - Click two matching free tiles to remove them.
+          </p>
         </div>
 
         <div class="debug-controls">
@@ -60,19 +73,6 @@
           </div>
         </div>
 
-        <div class="help-section">
-          <h2>How to Play</h2>
-          <p>
-            <strong>Goal:</strong> Remove all matching pairs of tiles from the board.
-          </p>
-          <p>
-            <strong>Rules:</strong><br>
-            - Tiles are removed in pairs if they match exactly.<br>
-            - A tile is <em>free</em> if it has no tile on top and its left or right side is open.<br>
-            - Click two matching free tiles to remove them.
-          </p>
-        </div>
-
         <div class="footer-controls">
           <div class="control-group checkbox-group">
             <input type="checkbox" id="showDebug">
@@ -95,6 +95,6 @@
     </main>
   </div>
   
-  <script src="main.js?v=0.26"></script>
+  <script src="main.js?v=0.27"></script>
 </body>
 </html>

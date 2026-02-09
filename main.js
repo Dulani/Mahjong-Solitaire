@@ -3,6 +3,7 @@
  ***********************************************/
 let tiles = [];            // Array containing all tile objects.
 let selectedTileId = null; // Id of the currently selected tile.
+let messageTimeout = null;
 let currentLevel = 7;      // Start at Level 7 (Turtle).
 const TILE_WIDTH = 80;
 const TILE_HEIGHT = 100;
@@ -138,12 +139,34 @@ function generatePositions(level) {
 }
 
 /***********************************************
+ * Utility Functions
+ ***********************************************/
+function showMessage(text) {
+  const msgDiv = document.getElementById("message");
+  if (!msgDiv) return;
+
+  if (messageTimeout) clearTimeout(messageTimeout);
+
+  if (!text) {
+    msgDiv.style.opacity = "0";
+    return;
+  }
+
+  msgDiv.textContent = text;
+  msgDiv.style.opacity = "1";
+
+  messageTimeout = setTimeout(() => {
+    msgDiv.style.opacity = "0";
+  }, 3000);
+}
+
+/***********************************************
  * Initialize the Game
  ***********************************************/
 function initGame() {
   tiles = [];
   selectedTileId = null;
-  document.getElementById("message").textContent = "";
+  showMessage("");
 
   const positions = generatePositions(currentLevel);
   const totalTiles = positions.length;
@@ -348,27 +371,27 @@ function handleTileClick(tileId) {
   console.log(`Tile Clicked: ID=${tile.id}, Type=${tile.type}, LX=${tile.lx}, LY=${tile.ly}, Z=${tile.z}, Free=${isFree}`);
 
   if (!isFree) {
-    document.getElementById("message").textContent = "Tile is not free.";
+    showMessage("Tile is not free.");
     return;
   }
 
   if (selectedTileId === null) {
     selectedTileId = tileId;
-    document.getElementById("message").textContent = "Selected a tile. Click on its match.";
+    showMessage("Selected a tile. Click on its match.");
   } else {
     let firstTile = tiles.find(t => t.id === selectedTileId);
     if (firstTile.id === tile.id) {
       selectedTileId = null;
-      document.getElementById("message").textContent = "";
+      showMessage("");
     } else if (firstTile.type === tile.type) {
       firstTile.removed = true;
       tile.removed = true;
-      document.getElementById("message").textContent = "Matched!";
+      showMessage("Matched!");
       selectedTileId = null;
       renderTiles();
       checkWinCondition();
     } else {
-      document.getElementById("message").textContent = "Tiles do not match.";
+      showMessage("Tiles do not match.");
       selectedTileId = null;
     }
   }
@@ -377,7 +400,7 @@ function handleTileClick(tileId) {
 
 function checkWinCondition() {
   if (tiles.filter(t => !t.removed).length === 0) {
-    document.getElementById("message").textContent = "Congratulations! Level " + currentLevel + " cleared!";
+    showMessage("Congratulations! Level " + currentLevel + " cleared!");
     setTimeout(() => {
       currentLevel++;
       const input = document.getElementById("levelInput");
@@ -514,5 +537,5 @@ window.onload = () => {
     };
 
     initGame();
-    console.log("Mahjong Solitaire v0.26 initialized.");
+    console.log("Mahjong Solitaire v0.27 initialized.");
 };
