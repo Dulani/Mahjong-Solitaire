@@ -14,7 +14,8 @@ let ROTATION_Z = 0;
 let ZOOM_FACTOR = 2.0;
 let PAN_X = 100;
 let PAN_Y = 100;
-let SHOW_FREE_TILES = true;
+let SHOW_FREE_TILES = false;
+let SHOW_CLICKABLE_AREAS = false;
 const TILE_THICKNESS = 20;
 
 // Define a comprehensive set of Mahjong tile emojis (used as keys for SVG generation).
@@ -140,6 +141,10 @@ function renderTiles() {
       const isFree = isTileFree(tile);
       if (SHOW_FREE_TILES && isFree) {
         tileDiv.classList.add("free-debug");
+      }
+
+      if (SHOW_CLICKABLE_AREAS) {
+        tileDiv.classList.add("clickable-debug");
       }
 
       if (tile.id === selectedTileId) {
@@ -437,6 +442,12 @@ window.onload = () => {
         renderTiles();
     };
 
+    const clickableToggle = document.getElementById("clickableToggle");
+    if (clickableToggle) clickableToggle.onchange = (e) => {
+        SHOW_CLICKABLE_AREAS = e.target.checked;
+        renderTiles();
+    };
+
     initGame();
-    console.log("Mahjong Solitaire v0.22 initialized.");
+    console.log("Mahjong Solitaire v0.24 initialized.");
 };

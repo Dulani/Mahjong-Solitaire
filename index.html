@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Mahjong Solitaire – Final Release</title>
-  <link rel="stylesheet" href="style.css?v=0.22">
+  <link rel="stylesheet" href="style.css?v=0.24">
 </head>
 <body>
   <!-- SIDEBAR TOGGLE BUTTON -->
@@ -14,7 +14,7 @@
     <!-- SIDEBAR -->
     <aside id="sidebar" class="sidebar">
       <div class="sidebar-content">
-        <h1 title="v0.22">Mahjong Solitaire</h1>
+        <h1 title="v0.24">Mahjong Solitaire</h1>
 
         <div class="controls">
           <button id="newGameBtn">New Game</button>
@@ -51,8 +51,12 @@
             <input type="range" id="panY" min="0" max="100" step="1" value="100">
           </div>
           <div class="control-group checkbox-group">
-            <input type="checkbox" id="debugToggle" checked>
+            <input type="checkbox" id="debugToggle">
             <label for="debugToggle">Highlight Free Tiles</label>
+          </div>
+          <div class="control-group checkbox-group">
+            <input type="checkbox" id="clickableToggle">
+            <label for="clickableToggle">Show Clickable Areas</label>
           </div>
         </div>
 
@@ -77,7 +81,7 @@
         </div>
 
         <footer>
-          © 2025 Bocaletto Luca
+          © 2025 <a href="https://github.com/bocaletto-luca/Mahjong-Solitaire" target="_blank" style="color: #888; text-decoration: none;">Bocaletto Luca</a>
         </footer>
       </div>
     </aside>
@@ -91,6 +95,6 @@
     </main>
   </div>
   
-  <script src="main.js?v=0.22"></script>
+  <script src="main.js?v=0.24"></script>
 </body>
 </html>
