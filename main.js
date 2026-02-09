@@ -3,7 +3,7 @@
  ***********************************************/
 let tiles = [];            // Array containing all tile objects.
 let selectedTileId = null; // Id of the currently selected tile.
-let currentLevel = 5;      // Start at Level 5.
+let currentLevel = 7;      // Start at Level 7 (Turtle).
 const TILE_WIDTH = 80;
 const TILE_HEIGHT = 100;
 
@@ -14,7 +14,8 @@ let ROTATION_Z = 0;
 let ZOOM_FACTOR = 2.0;
 let PAN_X = 100;
 let PAN_Y = 100;
-let SHOW_FREE_TILES = true;
+let SHOW_FREE_TILES = false;
+let SHOW_CLICKABLE_AREAS = false;
 const TILE_THICKNESS = 20;
 
 // Define a comprehensive set of Mahjong tile emojis (used as keys for SVG generation).
@@ -28,45 +29,104 @@ const tileEmojis = ["🀇","🀈","🀉","🀊","🀋","🀌","🀍","🀎","�
  ***********************************************/
 function generatePositions(level) {
   const pos = [];
+  const CX = 1000;
+  const CY = 800;
 
-  for (let z = 0; z < level; z++) {
-    const diff = (level - 1 - z);
-    // Last layer is 1x1, second-to-last is 2x2, then it grows by 2 each layer down.
-    const width = (diff === 0) ? 1 : diff * 2;
-    const height = (diff === 0) ? 1 : diff * 2;
-
-    // Offset for centering the layer (Logical coordinates)
-    const offsetX = 1000 - (width * TILE_WIDTH) / 2;
-    const offsetY = 800 - (height * TILE_HEIGHT) / 2;
-
-    for (let r = 0; r < height; r++) {
-      for (let c = 0; c < width; c++) {
+  if (level === 7) {
+    // Standard Turtle Layout (144 tiles)
+    // Layer 0: Turtle Base (87 tiles)
+    const turtleBase = [
+      { y: 0, x: [1, 12] },
+      { y: 1, x: [3, 10] },
+      { y: 2, x: [2, 11] },
+      { y: 3, x: [0, 12] },
+      { y: 4, x: [1, 14] },
+      { y: 5, x: [2, 11] },
+      { y: 6, x: [3, 10] },
+      { y: 7, x: [1, 12] }
+    ];
+    turtleBase.forEach(row => {
+      for (let x = row.x[0]; x <= row.x[1]; x++) {
         pos.push({
-          lx: offsetX + c * TILE_WIDTH, // Logical X
-          ly: offsetY + r * TILE_HEIGHT, // Logical Y
-          z: z
+          lx: CX + (x - 7) * TILE_WIDTH,
+          ly: CY + (row.y - 3.5) * TILE_HEIGHT,
+          z: 0
         });
+      }
+    });
+
+    // Layer 1: 6x6 (36 tiles)
+    for (let r = 0; r < 6; r++) {
+      for (let c = 0; c < 6; c++) {
+        pos.push({
+          lx: CX + (c + 4.5 - 7) * TILE_WIDTH,
+          ly: CY + (r + 1 - 3.5) * TILE_HEIGHT,
+          z: 1
+        });
+      }
+    }
+
+    // Layer 2: 4x4 (16 tiles)
+    for (let r = 0; r < 4; r++) {
+      for (let c = 0; c < 4; c++) {
+        pos.push({
+          lx: CX + (c + 5.5 - 7) * TILE_WIDTH,
+          ly: CY + (r + 2 - 3.5) * TILE_HEIGHT,
+          z: 2
+        });
+      }
+    }
+
+    // Layer 3: 2x2 (4 tiles)
+    for (let r = 0; r < 2; r++) {
+      for (let c = 0; c < 2; c++) {
+        pos.push({
+          lx: CX + (c + 6.5 - 7) * TILE_WIDTH,
+          ly: CY + (r + 3 - 3.5) * TILE_HEIGHT,
+          z: 3
+        });
+      }
+    }
+
+    // Layer 4: 1x1 (1 tile)
+    pos.push({
+      lx: CX + (7 - 7) * TILE_WIDTH,
+      ly: CY + (3.5 - 3.5) * TILE_HEIGHT,
+      z: 4
+    });
+
+  } else {
+    // Tapering Pyramid Layout
+    for (let z = 0; z < level; z++) {
+      const diff = (level - 1 - z);
+      const width = (diff === 0) ? 1 : diff * 2;
+      const height = (diff === 0) ? 1 : diff * 2;
+
+      const offsetX = CX - (width * TILE_WIDTH) / 2;
+      const offsetY = CY - (height * TILE_HEIGHT) / 2;
+
+      for (let r = 0; r < height; r++) {
+        for (let c = 0; c < width; c++) {
+          pos.push({
+            lx: offsetX + c * TILE_WIDTH,
+            ly: offsetY + r * TILE_HEIGHT,
+            z: z
+          });
+        }
       }
     }
   }
 
   // Ensure even number of tiles for matching.
   if (pos.length % 2 !== 0) {
-    // To avoid "missing corner" bugs, we remove an internal tile from the bottom layer.
-    // Bottom layer is the beginning of the 'pos' array.
-    const bottomLayerDiff = level - 1;
-    const bottomWidth = (bottomLayerDiff === 0) ? 1 : bottomLayerDiff * 2;
-    const bottomHeight = (bottomLayerDiff === 0) ? 1 : bottomLayerDiff * 2;
-    const bottomCount = bottomWidth * bottomHeight;
-
-    if (bottomCount > 1) {
-      // Remove a tile near the center of the bottom layer to keep it hidden
-      const midR = Math.floor(bottomHeight / 2);
-      const midC = Math.floor(bottomWidth / 2);
-      const midIdx = midR * bottomWidth + midC;
-      pos.splice(midIdx, 1);
+    // Remove a tile near the center of the bottom layer
+    const bottomTiles = pos.filter(p => p.z === 0);
+    if (bottomTiles.length > 1) {
+      const midIdx = Math.floor(bottomTiles.length / 2);
+      const tileToRemove = bottomTiles[midIdx];
+      const idx = pos.indexOf(tileToRemove);
+      pos.splice(idx, 1);
     } else {
-      // Fallback for very small levels
       pos.shift();
     }
   }
@@ -140,6 +200,10 @@ function renderTiles() {
       const isFree = isTileFree(tile);
       if (SHOW_FREE_TILES && isFree) {
         tileDiv.classList.add("free-debug");
+      }
+
+      if (SHOW_CLICKABLE_AREAS) {
+        tileDiv.classList.add("clickable-debug");
       }
 
       if (tile.id === selectedTileId) {
@@ -375,12 +439,14 @@ function updatePerspective() {
 window.onload = () => {
     const newGameBtn = document.getElementById("newGameBtn");
     if (newGameBtn) newGameBtn.onclick = () => {
-        currentLevel = parseInt(document.getElementById("levelInput").value) || 5;
+        currentLevel = parseInt(document.getElementById("levelInput").value) || 7;
         initGame();
     };
 
     const levelInput = document.getElementById("levelInput");
-    if (levelInput) levelInput.onchange = (e) => {
+    if (levelInput) {
+        levelInput.value = currentLevel;
+        levelInput.onchange = (e) => {
         let val = parseInt(e.target.value);
         if (val >= 2) {
             currentLevel = val;
@@ -389,6 +455,7 @@ window.onload = () => {
             e.target.value = currentLevel;
         }
     };
+    }
 
     const sidebarToggle = document.getElementById("sidebarToggle");
     if (sidebarToggle) sidebarToggle.onclick = () => {
@@ -437,6 +504,12 @@ window.onload = () => {
         renderTiles();
     };
 
+    const clickableToggle = document.getElementById("clickableToggle");
+    if (clickableToggle) clickableToggle.onchange = (e) => {
+        SHOW_CLICKABLE_AREAS = e.target.checked;
+        renderTiles();
+    };
+
     initGame();
-    console.log("Mahjong Solitaire v0.22 initialized.");
+    console.log("Mahjong Solitaire v0.25 initialized.");
 };
