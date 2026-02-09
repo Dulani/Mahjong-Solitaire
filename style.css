@@ -247,7 +247,7 @@ footer {
   justify-content: center;
   backface-visibility: visible; /* Show edges when rotating */
   box-sizing: border-box;
-  pointer-events: none;
+  pointer-events: auto; /* Allow faces to capture clicks */
 }
 
 .tile-top {
@@ -327,8 +327,8 @@ footer {
 }
 
 .tile-face.clickable-debug {
-    box-shadow: inset 0 0 0 4px #ff0000;
-    background-color: rgba(255, 0, 0, 0.2) !important;
+    box-shadow: inset 0 0 0 4px #ff69b4; /* Hot Pink */
+    background-color: rgba(255, 105, 180, 0.2) !important;
 }
 
 /* ====================== MESSAGE AREA ====================== */

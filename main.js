@@ -291,7 +291,7 @@ function getTileSVG(emoji) {
       layouts[count].forEach(p => content += circle(p[0], p[1], p[2], colors[p[3]]));
     }
   }
-  return `<svg viewBox="${viewBox}" xmlns="http://www.w3.org/2000/svg">${content}</svg>`;
+  return `<svg viewBox="${viewBox}" xmlns="http://www.w3.org/2000/svg" style="pointer-events: none;">${content}</svg>`;
 }
 
 /***********************************************
@@ -514,5 +514,5 @@ window.onload = () => {
     };
 
     initGame();
-    console.log("Mahjong Solitaire v0.25 initialized.");
+    console.log("Mahjong Solitaire v0.26 initialized.");
 };
