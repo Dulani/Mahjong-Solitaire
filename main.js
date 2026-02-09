@@ -97,10 +97,12 @@ function generatePositions(level) {
 
   } else {
     // Tapering Pyramid Layout
+    // New formula: (level - z) * 2 ensures even width/height, thus even total tiles.
+    // Level 2: 4x4 (16) + 2x2 (4) = 20 tiles.
+    // Level 3: 6x6 (36) + 4x4 (16) + 2x2 (4) = 56 tiles.
     for (let z = 0; z < level; z++) {
-      const diff = (level - 1 - z);
-      const width = (diff === 0) ? 1 : diff * 2;
-      const height = (diff === 0) ? 1 : diff * 2;
+      const width = (level - z) * 2;
+      const height = (level - z) * 2;
 
       const offsetX = CX - (width * TILE_WIDTH) / 2;
       const offsetY = CY - (height * TILE_HEIGHT) / 2;
@@ -117,12 +119,10 @@ function generatePositions(level) {
     }
   }
 
-  // Ensure even number of tiles for matching.
+  // Ensure even number of tiles for matching (Safety net).
   if (pos.length % 2 !== 0) {
-    // Remove a tile from the bottom layer.
-    // We pick the one closest to the center (CX, CY) so it's likely covered by upper layers.
     const bottomTiles = pos.filter(p => p.z === 0);
-    if (bottomTiles.length > 1) {
+    if (bottomTiles.length > 0) {
       bottomTiles.sort((a, b) => {
         const distA = Math.pow(a.lx - CX, 2) + Math.pow(a.ly - CY, 2);
         const distB = Math.pow(b.lx - CX, 2) + Math.pow(b.ly - CY, 2);
@@ -131,8 +131,6 @@ function generatePositions(level) {
       const tileToRemove = bottomTiles[0];
       const idx = pos.indexOf(tileToRemove);
       pos.splice(idx, 1);
-    } else {
-      pos.shift();
     }
   }
 
@@ -207,10 +205,6 @@ function renderTiles() {
         tileDiv.classList.add("free-debug");
       }
 
-      if (SHOW_CLICKABLE_AREAS) {
-        tileDiv.classList.add("clickable-debug");
-      }
-
       if (tile.id === selectedTileId) {
         tileDiv.classList.add("selected");
       }
@@ -224,6 +218,10 @@ function renderTiles() {
         <div class="tile-face tile-left"></div>
         <div class="tile-face tile-right"></div>
       `;
+
+      if (SHOW_CLICKABLE_AREAS) {
+        tileDiv.querySelector('.tile-top').classList.add("clickable-debug");
+      }
 
       // Position in 3D space
       const tz = tile.z * TILE_THICKNESS;
